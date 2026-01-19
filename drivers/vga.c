@@ -16,7 +16,6 @@
 
 #include "vga.h"
 
-
 #define VGA_WIDTH  80
 #define VGA_HEIGHT 25
 
@@ -34,14 +33,33 @@ void vga_set_color(vga_color_t fg, vga_color_t bg) {
     vga_color = (uint8_t)fg | ((uint8_t)bg << 4);
 }
 
+static void vga_clear_line(uint16_t y) {
+    for (uint16_t x = 0; x < VGA_WIDTH; x++) {
+        VGA_MEM[y * VGA_WIDTH + x] = vga_entry(' ', vga_color);
+    }
+}
+
 void vga_clear(void) {
     for (uint16_t y = 0; y < VGA_HEIGHT; y++) {
-        for (uint16_t x = 0; x < VGA_WIDTH; x++) {
-            VGA_MEM[y * VGA_WIDTH + x] = vga_entry(' ', vga_color);
-        }
+        vga_clear_line(y);
     }
     cursor_x = 0;
     cursor_y = 0;
+}
+
+static void vga_scroll(void) {
+    // Move linhas 1..24 para 0..23
+    for (uint16_t y = 1; y < VGA_HEIGHT; y++) {
+        for (uint16_t x = 0; x < VGA_WIDTH; x++) {
+            VGA_MEM[(y - 1) * VGA_WIDTH + x] = VGA_MEM[y * VGA_WIDTH + x];
+        }
+    }
+
+    // Limpa a ultima linha
+    vga_clear_line(VGA_HEIGHT - 1);
+
+    cursor_y = VGA_HEIGHT - 1;
+    cursor_x = 0;
 }
 
 static void vga_newline(void) {
@@ -49,14 +67,34 @@ static void vga_newline(void) {
     if (cursor_y < VGA_HEIGHT - 1) {
         cursor_y++;
     } else {
-        /* Sem scroll ainda (deixa travado na ultima linha por enquanto) */
-        cursor_y = VGA_HEIGHT - 1;
+        // Scroll automatico quando chega no final
+        vga_scroll();
     }
 }
 
 void vga_putc(char c) {
     if (c == '\n') {
         vga_newline();
+        return;
+    }
+
+    if (c == '\r') {
+        // Carriage return: volta pro inicio da linha atual
+        cursor_x = 0;
+        return;
+    }
+
+    if (c == '\b') {
+        // Backspace simples (opcional, mas ajuda no terminal)
+        if (cursor_x > 0) {
+            cursor_x--;
+            VGA_MEM[cursor_y * VGA_WIDTH + cursor_x] = vga_entry(' ', vga_color);
+        }
+        return;
+    }
+
+    // Caracteres nao imprimiveis: ignora
+    if ((unsigned char)c < 0x20) {
         return;
     }
 

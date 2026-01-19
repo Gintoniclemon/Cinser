@@ -34,7 +34,10 @@ OBJS := \
   $(OBJDIR)/isr.o \
   $(OBJDIR)/irq.o \
   $(OBJDIR)/vga.o \
-  $(OBJDIR)/pic.o
+  $(OBJDIR)/pic.o \
+  $(OBJDIR)/cmos.o \
+  $(OBJDIR)/time.o \
+  $(OBJDIR)/keyboard.o
 
 .PHONY: all iso run clean dirs check-tools
 
@@ -83,6 +86,15 @@ $(OBJDIR)/vga.o: drivers/vga.c include/vga.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 $(OBJDIR)/pic.o: kernel/pic.c include/pic.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/cmos.o: kernel/cmos.c include/cmos.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/time.o: kernel/time.c include/time.h include/cmos.h include/irq.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+$(OBJDIR)/keyboard.o: drivers/keyboard.c include/keyboard.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link
