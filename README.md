@@ -1,20 +1,31 @@
-# 🪐 Tervia Cinser OS
+# 🪐 Tervia Cinser
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-![Year: 2026](https://img.shields.io/badge/Year-2026-blueviolet)
-![Status: In_Development](https://img.shields.io/badge/Status-Development-orange)
+![Since: 2026](https://img.shields.io/badge/Since-2026-rebeccapurple)
+![Focus: Privacy](https://img.shields.io/badge/Focus-Privacy-green)
 
-O **Tervia Cinser** é um sistema operacional moderno desenvolvido pela **Tervia Corporation**. Este projeto visa explorar conceitos avançados de kernel e arquitetura de sistemas, mantendo a filosofia de software livre.
+A sovereign computing environment developed by **Tervia Corporation**. **Tervia Cinser** is not just a system; it is a statement on how modern software should respect the user.
 
 ---
 
-## 🚀 Como Compilar e Executar
+## 📖 Philosophy & Vision
 
-O projeto utiliza um sistema de automação baseado em `Makefile`. Certifique-se de ter as dependências instaladas antes de começar.
+Tervia Cinser is built on three fundamental pillars:
 
-### 📦 Pré-requisitos (Linux)
-Para compilar o núcleo e as ferramentas em C e Assembly, você precisará dos seguintes pacotes (exemplo para distribuições baseadas em Debian/Ubuntu):
+1. **Privacy by Design:** In an era of constant surveillance, Tervia Cinser is engineered to be a fortress. We do not implement telemetry, tracking, or "phone home" features. Your data stays where it belongs: with you.
+2. **Freedom:** Licensed under **GPLv3**, we ensure that the system remains open for study, modification, and redistribution. We believe in the democratization of technology.
+3. **Simplicity & Performance:** Written in C and Assembly, the system follows a minimalist approach, avoiding the "bloatware" of modern environments to provide raw performance and security.
+
+---
+
+## 🚀 Getting Started
+
+The project uses a standard `Makefile` system for automation.
+
+### 📦 Prerequisites (Linux)
+Before compiling, ensure you have the necessary toolchains installed.
+*(Note: List to be finalized by the developer)*
 
 ```bash
 sudo apt update
-sudo apt install build-essential nasm qemu-system-x86 mtools crossbuild-essential-i686-linux-gnu
+sudo apt install build-essential nasm qemu-system-x86 mtools
