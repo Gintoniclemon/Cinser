@@ -30,7 +30,8 @@ OBJS := \
   $(OBJDIR)/isr_halt.o \
   $(OBJDIR)/kernel.o \
   $(OBJDIR)/idt.o \
-  $(OBJDIR)/vga.o
+  $(OBJDIR)/vga.o \
+  $(OBJDIR)/pic.o
 
 .PHONY: all iso run clean dirs check-tools
 
@@ -66,6 +67,9 @@ $(OBJDIR)/idt.o: kernel/idt.c include/idt.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/vga.o: drivers/vga.c include/vga.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+	
+$(OBJDIR)/pic.o: kernel/pic.c include/pic.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link

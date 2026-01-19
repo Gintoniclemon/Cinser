@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include "vga.h"
 #include "idt.h"
+#include "pic.h"
 
 #define MULTIBOOT_MAGIC 0x2BADB002u
 
@@ -30,13 +31,31 @@ static void print_hex32(uint32_t v) {
 }
 
 void kernel_main(uint32_t magic, uint32_t mb_info) {
-    // IDT primeiro: evita triple fault se qualquer excecao acontecer
-    idt_init();
-
+    // Inicialize VGA e imprima algo ANTES de habilitar IRQs.
+    // Se voce fizer `sti` com IRQ0/IRQ1 liberadas enquanto todos os vetores
+    // ainda apontam para `isr_halt`, o PIT/teclado vao disparar e o CPU para
+    // antes de voce ver qualquer texto.
     vga_init();
 	vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     vga_write("Tervia Cinser\n");
     vga_write("A i386 Operating System\n\n");
+
+    vga_set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
+    vga_write("[OK] VGA init\n");
+
+    // IDT + PIC (mantem tudo mascarado por padrao)
+    idt_init();
+    vga_write("[OK] IDT init\n");
+
+    pic_init();
+    vga_write("[OK] PIC remap/mask\n\n");
+
+    // IMPORTANTE: nao desmascare IRQ0/IRQ1 nem chame `sti` ate voce ter
+    // handlers de IRQ reais (timer/keyboard) e mandar EOI corretamente.
+    // Se voce quiser testar com IRQs mais tarde, descomente:
+    // pic_unmask_irq(0);
+    // pic_unmask_irq(1);
+    // asm volatile ("sti");
 
     vga_write("Multiboot magic: ");
     if (magic == MULTIBOOT_MAGIC) {
@@ -48,7 +67,7 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
         print_hex32(magic);
         vga_write(")\n");
     }
-	vga_set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
+    vga_set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
     vga_write("Multiboot info ptr: ");
     print_hex32(mb_info);
     vga_write("\n\n");
