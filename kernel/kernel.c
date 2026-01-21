@@ -21,14 +21,30 @@
 #include "io.h"
 #include "cmos.h"
 #include "time.h"
+#include "delay.h"
 #include "memory.h"
 #include "keyboard.h"
 #include "sysconfig.h"
 #include "console.h"
 #include "video.h"
 #include "multiboot.h"
+#include "desktop.h"
+#include "mouse.h"
 
 #define MULTIBOOT_MAGIC 0x2BADB002u
+
+uint32_t time_get_ticks(void);
+
+void wait_vsync(void) {
+    // 1. Se já estamos no meio de um VSync (retrace), espera ele acabar
+    // (Isso evita pegar o VSync no finalzinho e não ter tempo de desenhar)
+    while (inb(0x3DA) & 8);
+    
+    // 2. Espera o PRÓXIMO VSync começar
+    // Nesse momento exato, o canhão de elétrons volta pro topo da tela.
+    // Temos alguns milissegundos para desenhar antes dele descer.
+    while (!(inb(0x3DA) & 8));
+}
 
 static void print_hex32(uint32_t v) {
     const char *hex = "0123456789ABCDEF";
@@ -70,6 +86,7 @@ static volatile uint32_t g_ticks = 0;
 static void timer_irq(regs_t *r) {
     (void)r;
     time_tick();
+    delay_tick();
 }
 
 static void keyboard_irq(regs_t *r) {
@@ -180,7 +197,8 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
 	
 	vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 	vga_write("[7] TIME... ");
-	time_init(18);
+	time_init(1000);
+	delay_init(1000);
 	vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
 	vga_write(" [OK]\n");
 	
@@ -206,6 +224,12 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
     vga_write("[11] Keyboard... ");
     keyboard_init();
 	vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
+    vga_write(" [OK]\n");
+	
+	vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    vga_write("[12] Mouse... ");
+    mouse_init();
+	vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
     vga_write(" [OK]\n\n");
 	
 	vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -219,15 +243,60 @@ void kernel_main(uint32_t magic, uint32_t mb_info) {
     vga_write("Cinser Kernel OK! ");
     vga_write("(dots = timer, KBD shows scancode)\n\n");
 	
+	delay_time(5);
+	
+// ... código de inicialização anterior ...
 
-	for (;;) {
-		__asm__ volatile("hlt");   // acorda em cada IRQ
+    desktop_init();
 
-		if (time_has_update()) {
-			time_consume_update();
-			vga_write("RTC: ");
-			vga_write(time_datetime_str());
-			vga_write("\r");
-		}
-	}
+    int need_redraw = 1;
+    uint32_t last_frame_time = 0; // Controle de FPS
+
+    for (;;) {
+        // HLT economiza CPU e espera a próxima interrupção (Timer ou Teclado)
+        __asm__ volatile("hlt");
+
+        // 1. Processa TODAS as teclas pendentes antes de desenhar
+        // Isso evita desenhar 10 vezes se 10 teclas chegaram juntas
+        if (keyboard_haschar()) {
+            while (keyboard_haschar()) {
+                int ch = keyboard_getchar();
+                if (ch > 0) {
+                    desktop_key((char)ch);
+                    need_redraw = 1; 
+                }
+            }
+        }
+        
+        // 2. Desenha (Com Limitador de 60 FPS)
+        if (need_redraw) {
+            uint32_t now = time_get_ticks();
+            
+            // 1000ms / 60fps ≈ 16ms por frame
+            // Se passou menos de 16ms desde o último desenho, PULA.
+            // Isso evita sobrecarregar o barramento de vídeo à toa.
+            if ((now - last_frame_time) < 16) {
+                continue; 
+            }
+            
+            // Marca o tempo deste frame
+            last_frame_time = now;
+
+            // --- INÍCIO DO DESENHO ---
+            
+            // A. Desenha na RAM (Backbuffer)
+            desktop_draw();
+            
+            // B. Sincronia Fina com o Monitor (VSync)
+            wait_vsync();
+
+            // C. Copia para a Tela (VRAM) de forma Atômica
+            if (g_video_driver && g_video_driver->update) {
+                g_video_driver->update();
+            }
+            
+            need_redraw = 0;
+            // -------------------------
+        }
+    }
 }

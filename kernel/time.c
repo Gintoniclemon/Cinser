@@ -2,23 +2,17 @@
  * Projeto: Tervia Cinser OS
  * Arquivo: time.c
  * Descricao: Servicos de tempo (CMOS/RTC + contagem por IRQ0/PIT).
- * Copyright (C) 2026 Tervia Corporation.
- *
- * Este programa e um software livre: voce pode redistribui-lo e/ou
- * modifica-lo sob os termos da Licenca Publica Geral GNU como publicada
- * pela Free Software Foundation, bem como a versao 3 da Licenca.
- *
- * Este programa e distribuido na esperanca de que possa ser util,
- * mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUACAO
- * a qualquer MERCADO ou APLICACAO EM PARTICULAR. Veja a
- * Licenca Publica Geral GNU para mais detalhes.
  ****************************************************************************/
 
 #include <stdint.h>
 #include "time.h"
+#include "io.h" // NECESSÁRIO para outb/inb
+
+// Frequência base do oscilador do chip PIT (1.193182 MHz)
+#define PIT_FREQUENCY 1193180
 
 static volatile uint32_t g_ticks = 0;
-static volatile uint32_t g_ticks_per_sec = 18;
+static volatile uint32_t g_ticks_per_sec = 1000;
 static volatile int g_ready = 0;
 
 static volatile rtc_time_t g_time;
@@ -55,8 +49,6 @@ static void rebuild_time_str(void) {
     g_time_str[19] = '\0';
 }
 
-// Incremento simples (sem calendario completo). Funciona bem para segundos/minutos/horas.
-// Se quiser suporte a dia/mes/ano correto com meses e anos bissextos, fazemos um patch depois.
 static void tick_one_second(void) {
     g_time.sec++;
     if (g_time.sec >= 60) {
@@ -67,34 +59,46 @@ static void tick_one_second(void) {
             g_time.hour++;
             if (g_time.hour >= 24) {
                 g_time.hour = 0;
-                // Opcional: dia++ (sem calendario completo)
-                // g_time.day++;
+                // g_time.day++; // Calendário completo requer lógica de bissexto
             }
         }
     }
-
     rebuild_time_str();
     g_time_str_dirty = 1;
 }
 
-// Deve ser chamado pelo handler do IRQ0 (timer).
-// Mantemos o contador interno e avancamos 1 segundo quando
-// g_ticks_per_sec ticks forem atingidos.
+// Handler chamado pelo IRQ0
 void time_tick(void) {
     g_ticks++;
 
     if (!g_ready) return;
 
+    // Atualiza o relógio a cada segundo real
     if ((g_ticks_per_sec != 0) && ((g_ticks % g_ticks_per_sec) == 0)) {
         tick_one_second();
     }
 }
 
+// AQUI ESTAVA O ERRO: Faltava programar o chip PIT!
 void time_init(uint32_t pit_ticks_per_sec) {
-    if (pit_ticks_per_sec == 0) pit_ticks_per_sec = 18;
+    if (pit_ticks_per_sec == 0) pit_ticks_per_sec = 1000;
+    
+    // 1. Atualiza a variável do Kernel
     g_ticks_per_sec = pit_ticks_per_sec;
 
-    // Le o RTC uma vez e usa o IRQ0 para manter o tempo andando (Opcao A)
+    // 2. Calcula o Divisor (Hardware)
+    uint32_t divisor = PIT_FREQUENCY / pit_ticks_per_sec;
+
+    // 3. Envia Comandos para o Chip PIT (Isso que faltava)
+    outb(0x43, 0x36); // Modo 3 (Square Wave)
+    
+    uint8_t l = (uint8_t)(divisor & 0xFF);
+    uint8_t h = (uint8_t)((divisor >> 8) & 0xFF);
+
+    outb(0x40, l);    // Low Byte
+    outb(0x40, h);    // High Byte
+
+    // 4. Inicializa RTC
     rtc_time_t t;
     cmos_read_rtc(&t);
     g_time = t;
@@ -105,7 +109,6 @@ void time_init(uint32_t pit_ticks_per_sec) {
 }
 
 rtc_time_t time_now(void) {
-    // copia atomica simples (na pratica suficiente aqui)
     rtc_time_t t = g_time;
     return t;
 }
@@ -120,4 +123,10 @@ int time_has_update(void) {
 
 void time_consume_update(void) {
     g_time_str_dirty = 0;
+}
+
+// Retorna o número de Ticks (ms) desde o boot
+// Adicione isso no final do arquivo time.c
+uint32_t time_get_ticks(void) {
+    return g_ticks;
 }

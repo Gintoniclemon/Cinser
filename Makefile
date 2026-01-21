@@ -33,10 +33,15 @@ OBJS := \
   $(OBJDIR)/memory.o \
   $(OBJDIR)/sysconfig.o \
   $(OBJDIR)/time.o \
+  $(OBJDIR)/delay.o \
   $(OBJDIR)/keyboard.o \
+  $(OBJDIR)/mouse.o \
   $(OBJDIR)/video.o \
   $(OBJDIR)/video_vesa.o \
-  $(OBJDIR)/console.o
+  $(OBJDIR)/console.o \
+  $(OBJDIR)/desktop.o \
+  $(OBJDIR)/window.o \
+  $(OBJDIR)/shell.o
 
 .PHONY: all iso run clean dirs check-tools
 
@@ -94,7 +99,13 @@ $(OBJDIR)/sysconfig.o: kernel/sysconfig.c include/sysconfig.h include/memory.h |
 $(OBJDIR)/keyboard.o: drivers/keyboard.c include/keyboard.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJDIR)/mouse.o: drivers/mouse.c include/mouse.h include/irq.h include/pic.h include/io.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $(OBJDIR)/time.o: kernel/time.c include/time.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/delay.o: kernel/delay.c include/delay.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # --- NOVOS DRIVERS DE VIDEO ---
@@ -106,6 +117,15 @@ $(OBJDIR)/video_vesa.o: drivers/video_vesa.c include/video.h include/multiboot.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/console.o: drivers/console.c include/console.h include/font.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/desktop.o: kernel/desktop.c include/desktop.h include/window.h include/video.h include/font.h include/programs/shell.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/window.o: kernel/window.c include/window.h include/video.h include/font.h | dirs
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/shell.o: programs/shell.c include/programs/shell.h include/window.h | dirs
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # --- Link ---

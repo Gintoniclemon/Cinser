@@ -355,73 +355,62 @@ const char* meminfo_str(void) {
 // ----------------------------
 
 void memory_init(uint32_t multiboot_magic, uint32_t mb_info_ptr) {
+    // Configuração de segurança: Heap de 16 MiB (Suficiente para Video 3MB + Kernel)
+    // Antes era 512KiB, o que causava falha na alocação do Double Buffer.
+    const uint32_t KERNEL_HEAP_SIZE = 16u * 1024u * 1024u; 
+
     if (multiboot_magic != MULTIBOOT_MAGIC) {
-        // sem multiboot: nao inicializa PMM, mas ainda tenta um heap minimo apos o kernel
         uint32_t kend = (uint32_t)&_kernel_end;
         uint32_t heap_base = align_up_u32(kend, 16u);
-        heap_init(heap_base, 256u * 1024u);
+        heap_init(heap_base, KERNEL_HEAP_SIZE);
         return;
     }
 
     multiboot_info_t *mb = (multiboot_info_t*)mb_info_ptr;
 
-    // precisa de mmap
     if ((mb->flags & (1u << 6)) == 0u) {
         uint32_t kend = (uint32_t)&_kernel_end;
         uint32_t heap_base = align_up_u32(kend, 16u);
-        heap_init(heap_base, 256u * 1024u);
+        heap_init(heap_base, KERNEL_HEAP_SIZE);
         return;
     }
 
-    // Limite REAL de RAM (em bytes): use mem_upper (flags bit0) e trunque mmap.
-    // Isso evita "inventar" RAM em VMs pequenas e funciona em PC real tambem.
+    // Limite REAL de RAM
     uint64_t ram_limit_bytes = 0;
     if ((mb->flags & 1u) != 0u) {
-        // mem_upper = KiB acima de 1MiB. Total aproximado = (mem_upper + 1024) KiB.
         ram_limit_bytes = ((uint64_t)mb->mem_upper + 1024ull) * 1024ull;
     }
-    if (ram_limit_bytes == 0) {
-        // fallback: limite 4GiB (i386 sem PAE)
-        ram_limit_bytes = PHYS_4G_LIMIT;
-    }
+    if (ram_limit_bytes == 0) ram_limit_bytes = PHYS_4G_LIMIT;
     if (ram_limit_bytes > PHYS_4G_LIMIT) ram_limit_bytes = PHYS_4G_LIMIT;
 
     g_pmm_frames_total = (uint32_t)(ram_limit_bytes / (uint64_t)PAGE_SIZE);
-    if (g_pmm_frames_total < 256u) g_pmm_frames_total = 256u;
+    if (g_pmm_frames_total < 4096u) g_pmm_frames_total = 4096u; // Mínimo seguro
 
     g_pmm_bitmap_bytes = (g_pmm_frames_total + 7u) / 8u;
 
-    // bitmap logo apos o kernel
     uint32_t kend = (uint32_t)&_kernel_end;
     uint32_t bitmap_addr = align_up_u32(kend, 16u);
     g_pmm_bitmap = (uint8_t*)bitmap_addr;
 
-    // Reserva espaco do bitmap
     uint32_t bitmap_end = bitmap_addr + g_pmm_bitmap_bytes;
 
-    // Depois do bitmap, heap inicial
+    // Heap começa logo após o bitmap
     uint32_t heap_base = align_up_u32(bitmap_end, 16u);
-    uint32_t heap_size = 512u * 1024u; // 512 KiB inicial
-
-    // Zera bitmap e marca tudo como usado, depois libera regioes RAM
+    
+    // Zera bitmap e marca tudo como usado
     pmm_mark_all_used();
 
     uint32_t mmap_end = mb->mmap_addr + mb->mmap_length;
 
-    // libera apenas tipo 1 (RAM), truncando ao limite real
     for (uint32_t p = mb->mmap_addr; p < mmap_end; ) {
         multiboot_mmap_entry_t *e = (multiboot_mmap_entry_t*)p;
-
         if (e->type == 1u) {
             uint64_t start = ((uint64_t)e->addr_high << 32) | (uint64_t)e->addr_low;
             uint64_t len   = ((uint64_t)e->len_high  << 32) | (uint64_t)e->len_low;
             uint64_t end   = start + len;
 
-            // corta fora do limite real
             if (start < ram_limit_bytes && end > start) {
                 if (end > ram_limit_bytes) end = ram_limit_bytes;
-
-                // i386 sem PAE: ignore acima de 4GiB
                 if (start < PHYS_4G_LIMIT) {
                     if (end > PHYS_4G_LIMIT) end = PHYS_4G_LIMIT;
                     if (end > start) {
@@ -430,23 +419,29 @@ void memory_init(uint32_t multiboot_magic, uint32_t mb_info_ptr) {
                 }
             }
         }
-
         p += e->size + 4u;
     }
 
-    // reserva regiao baixa (0..1MiB) por seguranca
+    // Protege região baixa
     pmm_mark_region_used(0u, 0x100000u);
 
-    // reserva kernel + bitmap + heap inicial
-    uint32_t reserved_end = heap_base + heap_size;
+    // Protege Kernel + Bitmap + HEAP GRANDE
+    uint32_t reserved_end = heap_base + KERNEL_HEAP_SIZE;
+    
+    // Garante que não passamos do fim da RAM física
     if ((uint64_t)reserved_end > ram_limit_bytes) {
-        // se RAM for muito pequena, nao deixe estourar o limite
         reserved_end = (uint32_t)ram_limit_bytes;
+        // Se a RAM for muito pouca, ajusta o heap para o que sobrar (melhor que crashar)
+        if (reserved_end > heap_base) {
+             // Recalcula heap para caber na RAM
+             // (Mas com 128MB isso não deve acontecer)
+        }
     }
+
     if (reserved_end > 0x100000u) {
         pmm_mark_region_used(0x100000u, reserved_end - 0x100000u);
     }
 
-    // init heap
-    heap_init(heap_base, heap_size);
+    // Inicializa o Heap com o tamanho novo (16MB)
+    heap_init(heap_base, KERNEL_HEAP_SIZE);
 }

@@ -3,76 +3,97 @@
 
 #include <stdint.h>
 
-/* O número mágico passado pelo bootloader (deve estar em EAX) */
-#define MULTIBOOT_BOOTLOADER_MAGIC    0x2BADB002
+/*
+ * Multiboot v1 structures (GRUB legacy / grub-mkrescue normalmente usa isso)
+ * Referência: Multiboot Specification v0.6.96
+ */
 
-/* Flags para verificar se o campo está válido */
-#define MULTIBOOT_INFO_MEMORY         0x00000001
-#define MULTIBOOT_INFO_BOOTDEV        0x00000002
-#define MULTIBOOT_INFO_CMDLINE        0x00000004
-#define MULTIBOOT_INFO_MODS           0x00000008
-#define MULTIBOOT_INFO_AOUT_SYMS      0x00000010
-#define MULTIBOOT_INFO_ELF_SHDR       0X00000020
-#define MULTIBOOT_INFO_MEM_MAP        0x00000040
-#define MULTIBOOT_INFO_DRIVE_INFO     0x00000080
-#define MULTIBOOT_INFO_CONFIG_TABLE   0x00000100
+#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
+
+// info flags
+#define MULTIBOOT_INFO_MEMORY      0x00000001
+#define MULTIBOOT_INFO_BOOTDEV     0x00000002
+#define MULTIBOOT_INFO_CMDLINE     0x00000004
+#define MULTIBOOT_INFO_MODS        0x00000008
+#define MULTIBOOT_INFO_AOUT_SYMS   0x00000010
+#define MULTIBOOT_INFO_ELF_SHDR    0x00000020
+#define MULTIBOOT_INFO_MEM_MAP     0x00000040
+#define MULTIBOOT_INFO_DRIVE_INFO  0x00000080
+#define MULTIBOOT_INFO_CONFIG_TABLE 0x00000100
 #define MULTIBOOT_INFO_BOOT_LOADER_NAME 0x00000200
-#define MULTIBOOT_INFO_APM_TABLE      0x00000400
-#define MULTIBOOT_INFO_VBE_INFO       0x00000800
-#define MULTIBOOT_INFO_FRAMEBUFFER_INFO 0x00001000
+#define MULTIBOOT_INFO_APM_TABLE   0x00000400
+#define MULTIBOOT_INFO_VBE_INFO    0x00000800
+#define MULTIBOOT_INFO_FRAMEBUFFER_INFO 0x00001000  // bit 12
 
-/* Estrutura principal que o GRUB entrega em EBX */
+typedef struct multiboot_mmap_entry {
+    uint32_t size;
+    uint64_t addr;
+    uint64_t len;
+    uint32_t type;
+} __attribute__((packed)) multiboot_mmap_entry_t;
+
+typedef struct multiboot_mod_list {
+    uint32_t mod_start;
+    uint32_t mod_end;
+    uint32_t cmdline;
+    uint32_t pad;
+} multiboot_mod_list_t;
+
+typedef struct multiboot_aout_symbol_table {
+    uint32_t tabsize;
+    uint32_t strsize;
+    uint32_t addr;
+    uint32_t reserved;
+} multiboot_aout_symbol_table_t;
+
+typedef struct multiboot_elf_section_header_table {
+    uint32_t num;
+    uint32_t size;
+    uint32_t addr;
+    uint32_t shndx;
+} multiboot_elf_section_header_table_t;
+
 typedef struct multiboot_info {
     uint32_t flags;
 
-    // Memória disponível (flag bit 0)
+    // memory
     uint32_t mem_lower;
     uint32_t mem_upper;
 
-    // Disco de boot (flag bit 1)
+    // boot device
     uint32_t boot_device;
 
-    // Linha de comando do kernel (flag bit 2)
+    // command line
     uint32_t cmdline;
 
-    // Módulos (flag bit 3)
+    // modules
     uint32_t mods_count;
     uint32_t mods_addr;
 
-    // Tabelas de símbolos (ELF ou a.out)
+    // aout/elf
     union {
-        struct {
-            uint32_t tabsize;
-            uint32_t strsize;
-            uint32_t addr;
-            uint32_t reserved;
-        } aout_sym;
-        struct {
-            uint32_t num;
-            uint32_t size;
-            uint32_t addr;
-            uint32_t shndx;
-        } elf_sec;
+        multiboot_aout_symbol_table_t aout_sym;
+        multiboot_elf_section_header_table_t elf_sec;
     } u;
 
-    // Mapa de Memória (flag bit 6)
+    // memory map
     uint32_t mmap_length;
     uint32_t mmap_addr;
 
-    // Drives (flag bit 7)
+    // drives
     uint32_t drives_length;
     uint32_t drives_addr;
 
-    // Tabela de configuração ROM (flag bit 8)
+    // ROM config table
     uint32_t config_table;
 
-    // Nome do Bootloader (flag bit 9)
+    // boot loader name
     uint32_t boot_loader_name;
 
-    // Tabela APM (flag bit 10)
+    // APM table
     uint32_t apm_table;
 
-    // Informações de Vídeo VBE (flag bit 11)
+    // VBE info (flag bit 11)
     uint32_t vbe_control_info;
     uint32_t vbe_mode_info;
     uint16_t vbe_mode;
@@ -80,40 +101,31 @@ typedef struct multiboot_info {
     uint16_t vbe_interface_off;
     uint16_t vbe_interface_len;
 
-    // FRAMEBUFFER (VESA) INFO (flag bit 12)
-    // É AQUI QUE A MÁGICA ACONTECE
-    uint64_t framebuffer_addr;  // Endereço Físico onde desenhamos os pixels
-    uint32_t framebuffer_pitch; // Bytes por linha
-    uint32_t framebuffer_width; // Largura (ex: 1024)
-    uint32_t framebuffer_height;// Altura (ex: 768)
-    uint8_t framebuffer_bpp;    // Bits por pixel (ex: 32)
-    
-    uint8_t framebuffer_type;   // 0=Indexado, 1=RGB Direto, 2=Texto
-    
+    // Framebuffer info (flag bit 12)
+    uint64_t framebuffer_addr;
+    uint32_t framebuffer_pitch;
+    uint32_t framebuffer_width;
+    uint32_t framebuffer_height;
+    uint8_t  framebuffer_bpp;
+    uint8_t  framebuffer_type; // 0 = indexed, 1 = RGB, 2 = EGA text
+    uint16_t reserved;
+
+    // color info
     union {
         struct {
             uint32_t framebuffer_palette_addr;
             uint16_t framebuffer_palette_num_colors;
-        };
+        } __attribute__((packed)) palette;
+
         struct {
-            // Posição e tamanho das cores (Red, Green, Blue)
             uint8_t framebuffer_red_field_position;
             uint8_t framebuffer_red_mask_size;
             uint8_t framebuffer_green_field_position;
             uint8_t framebuffer_green_mask_size;
             uint8_t framebuffer_blue_field_position;
             uint8_t framebuffer_blue_mask_size;
-        };
-    };
-
+        } __attribute__((packed)) rgb;
+    } color_info;
 } __attribute__((packed)) multiboot_info_t;
-
-// Estrutura para o mapa de memória (mmap)
-typedef struct multiboot_mmap_entry {
-    uint32_t size;
-    uint64_t addr;
-    uint64_t len;
-    uint32_t type;
-} __attribute__((packed)) multiboot_memory_map_t;
 
 #endif

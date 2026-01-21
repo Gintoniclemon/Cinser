@@ -15,6 +15,10 @@ typedef struct {
     void (*put_pixel)(int x, int y, uint32_t color);
     void (*clear_screen)(uint32_t color);
     void (*update)(void);
+
+    // (Opcional) Aceleradores: quando presentes, evitam desenhar pixel-a-pixel.
+    // Drivers antigos podem deixar NULL sem quebrar nada.
+    void (*fill_rect)(int x, int y, int w, int h, uint32_t color);
 } video_driver_t;
 
 // Variavel global do driver ativo
