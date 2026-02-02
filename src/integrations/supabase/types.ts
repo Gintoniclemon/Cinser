@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      crescendo_tirages: {
+        Row: {
+          annee: number
+          created_at: string
+          date_tirage: string
+          id: string
+          numero_1: number
+          numero_2: number
+          numero_3: number
+          numero_4: number
+          numero_5: number
+        }
+        Insert: {
+          annee: number
+          created_at?: string
+          date_tirage: string
+          id?: string
+          numero_1: number
+          numero_2: number
+          numero_3: number
+          numero_4: number
+          numero_5: number
+        }
+        Update: {
+          annee?: number
+          created_at?: string
+          date_tirage?: string
+          id?: string
+          numero_1?: number
+          numero_2?: number
+          numero_3?: number
+          numero_4?: number
+          numero_5?: number
+        }
+        Relationships: []
+      }
       eurodreams_tirages: {
         Row: {
           annee: number

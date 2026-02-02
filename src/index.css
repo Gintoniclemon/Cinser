@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 217 91% 60%;
+    
+    --radius: 0.75rem;
+    
+    /* Lottery specific colors */
+    --loto: 142 76% 36%;
+    --loto-foreground: 210 40% 98%;
+    
+    --euromillions: 45 93% 47%;
+    --euromillions-foreground: 222 47% 11%;
+    
+    --eurodreams: 262 83% 58%;
+    --eurodreams-foreground: 210 40% 98%;
+    
+    --crescendo: 350 89% 60%;
+    --crescendo-foreground: 210 40% 98%;
+  }
+  
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 20% 45%;
+    
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .lottery-ball {
+    @apply flex items-center justify-center rounded-full font-bold text-lg shadow-lg transition-all duration-200;
+  }
+  
+  .lottery-ball-loto {
+    @apply bg-loto text-loto-foreground;
+  }
+  
+  .lottery-ball-euromillions {
+    @apply bg-euromillions text-euromillions-foreground;
+  }
+  
+  .lottery-ball-eurodreams {
+    @apply bg-eurodreams text-eurodreams-foreground;
+  }
+  
+  .lottery-ball-crescendo {
+    @apply bg-crescendo text-crescendo-foreground;
+  }
+  
+  .stat-card {
+    @apply rounded-xl border bg-card p-6 shadow-lg transition-all duration-200 hover:shadow-xl;
+  }
+  
+  .glass-effect {
+    @apply bg-card/80 backdrop-blur-md;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
+}
